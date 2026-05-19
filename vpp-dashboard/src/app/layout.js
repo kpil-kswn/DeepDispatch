@@ -1,10 +1,9 @@
-import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import LoginModel from "@/components/LoginModel";
 import AuthProvider from "@/components/AuthProvider";
+import ClientLogin from "@/components/ClientLogin"; // <-- Using the middleman!
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,16 +36,8 @@ export default function RootLayout({ children }) {
         className={`${inter.className} flex flex-col min-h-screen bg-gray-950 text-gray-100`}
       >
         <AuthProvider>
-          {/* SLEDGEHAMMER 1: Shield the entire Navbar */}
-          <Suspense fallback={<div className="h-16 bg-gray-900 border-b border-gray-800"></div>}>
-            <Navbar />
-          </Suspense>
-          
-          {/* SLEDGEHAMMER 2: Shield the Login Model */}
-          <Suspense fallback={null}>
-            <LoginModel />
-          </Suspense>
-          
+          <Navbar />
+          <ClientLogin /> {/* <-- Safely rendered here */}
           <div className="flex-grow">{children}</div>
           <Footer />
         </AuthProvider>

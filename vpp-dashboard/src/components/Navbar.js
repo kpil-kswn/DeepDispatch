@@ -1,12 +1,14 @@
 'use client' 
 
-import { useState, Suspense } from "react"; // Added Suspense import here
+import { useState } from "react"; 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { useSession, signOut } from "next-auth/react";
-// IMPORTANT: Adjust this import path if your SubscriptionModel is in a different folder!
-import SubscriptionModel from "./SubscriptionModel"; 
+import dynamic from "next/dynamic";
+
+// THE NUCLEAR OPTION: Completely hides SubscriptionModel from Vercel's build engine
+const SubscriptionModel = dynamic(() => import("./SubscriptionModel"), { ssr: false });
 
 export default function Navbar() {
     const { data: session } = useSession();
@@ -53,7 +55,6 @@ export default function Navbar() {
                     <Link href="/predict/solar" className="hover:text-white transition-colors">Solar Forecast</Link>
                     <Link href="/predict/wind" className="hover:text-white transition-colors">Wind Forecast</Link>
                     
-                    {/* CHANGED: Replaced the Link with our smart button */}
                     <button 
                         onClick={handleOptimizerClick} 
                         className="hover:text-emerald-400 transition-colors font-medium"
@@ -65,7 +66,6 @@ export default function Navbar() {
                 {/* 3. AUTHENTICATION UI */}
                 <div className="flex gap-4 items-center text-sm font-medium">
                     {session ? (
-                        // IF LOGGED IN: Show Profile Link, Avatar, and Logout
                         <div className="flex items-center gap-6">
                             <Link href="/profile" className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors">
                                 Profile Dashboard
@@ -86,7 +86,6 @@ export default function Navbar() {
                             </div>
                         </div>
                     ) : (
-                        // IF LOGGED OUT: Trigger the Login Modal
                         <>
                             <button 
                                 onClick={openModal} 
@@ -105,13 +104,10 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* SLEDGEHAMMER 3: Shield the Subscription Model directly inside the Navbar */}
-            <Suspense fallback={null}>
-                <SubscriptionModel 
-                    isOpen={isProModalOpen} 
-                    onClose={() => setIsProModalOpen(false)} 
-                />
-            </Suspense>
+            <SubscriptionModel 
+                isOpen={isProModalOpen} 
+                onClose={() => setIsProModalOpen(false)} 
+            />
         </nav>
     );
 }
