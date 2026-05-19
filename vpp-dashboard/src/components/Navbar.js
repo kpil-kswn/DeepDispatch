@@ -1,6 +1,6 @@
 'use client' 
 
-import { useState } from "react";
+import { useState, Suspense } from "react"; // Added Suspense import here
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Logo from "./Logo";
@@ -105,11 +105,13 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* NEW: Inject the hidden Subscription Modal into the Navbar */}
-            <SubscriptionModel 
-                isOpen={isProModalOpen} 
-                onClose={() => setIsProModalOpen(false)} 
-            />
+            {/* SLEDGEHAMMER 3: Shield the Subscription Model directly inside the Navbar */}
+            <Suspense fallback={null}>
+                <SubscriptionModel 
+                    isOpen={isProModalOpen} 
+                    onClose={() => setIsProModalOpen(false)} 
+                />
+            </Suspense>
         </nav>
     );
 }
