@@ -14,7 +14,7 @@ export async function POST(request) {
 
         const body = await request.json();
         
-        const pythonResponse = await fetch('http://localhost:8000/api/v1/forecast', {
+        const pythonResponse = await fetch('https://deepdispatch.onrender.com', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
