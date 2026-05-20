@@ -36,8 +36,8 @@ export default function SolarPredict() {
         }),
       });
 
-      if (response.ok) alert("✅ Solar Site saved successfully!");
-      else alert("❌ Failed to save site. Are you logged in?");
+      if (response.ok) alert("Solar Site saved successfully!");
+      else alert("Failed to save site. Are you logged in?");
     } catch (error) {
       console.error("Error saving site:", error);
     }

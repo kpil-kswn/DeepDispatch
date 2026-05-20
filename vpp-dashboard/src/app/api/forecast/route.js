@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/authOptions";
 
 export async function POST(request) {
     try {
-        // 1. Verify User Session for History Saving
+        // verifying if user is present
         const session = await getServerSession(authOptions);
         if (!session || !session.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,13 +22,13 @@ export async function POST(request) {
 
         if (!pythonResponse.ok) {
             const errorText = await pythonResponse.text();
-            console.error('\n❌ PYTHON REJECTED THE DATA (422 Error):', errorText, '\n');
+            console.error('\n PYTHON REJECTED THE DATA (422 Error):', errorText, '\n');
             return NextResponse.json({ error: JSON.parse(errorText) }, { status: pythonResponse.status });
         }
 
         const data = await pythonResponse.json();
 
-        // 2. Format Data for the Database Schema (time, Solar, Wind, Battery_Action)
+        //formating data
         let chartFormattedData = [];
         if (data.forecast) {
             chartFormattedData = data.forecast.map((item) => {
@@ -40,11 +40,10 @@ export async function POST(request) {
                 };
             });
         }
-
-        // 3. Determine specific Forecast Type
+        // deciding servie type as per input 
         let serviceType = body.solar ? "solar_forecast" : "wind_forecast";
 
-        // 4. Save to History Collection
+        // contacting datbase
         await connectToDatabase();
         await History.create({
             userId: session.user.id,

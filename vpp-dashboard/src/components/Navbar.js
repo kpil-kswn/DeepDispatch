@@ -43,14 +43,10 @@ export default function Navbar() {
     return (
         <nav className="bg-gray-900 border-b border-gray-800 px-8 py-4 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto flex justify-between items-center">
-                
-                {/* 1. BRANDING */}
                 <Link href="/" className="flex items-center gap-3 text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
                     <Logo />
                     DeepDispatch
                 </Link>
-
-                {/* 2. NAVIGATION LINKS */}
                 <div className="hidden md:flex gap-6 text-sm font-medium text-gray-300 items-center">
                     <Link href="/predict/solar" className="hover:text-white transition-colors">Solar Forecast</Link>
                     <Link href="/predict/wind" className="hover:text-white transition-colors">Wind Forecast</Link>
@@ -63,7 +59,6 @@ export default function Navbar() {
                     </button>
                 </div>
 
-                {/* 3. AUTHENTICATION UI */}
                 <div className="flex gap-4 items-center text-sm font-medium">
                     {session ? (
                         <div className="flex items-center gap-6">

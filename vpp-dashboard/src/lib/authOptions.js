@@ -47,7 +47,6 @@ export const authOptions ={
   ],
   callbacks: {
     async signIn({ user, account }) {
-      // Intercept Google Logins
       if (account.provider === "google") {
         try {
           await connectToDatabase();
@@ -59,47 +58,42 @@ export const authOptions ={
               email: user.email,
               name: user.name,
               image: user.image,
-              isPro: false, // Explicitly set to false for new Google users
+              isPro: false, 
             });
           }
-          return true; // Continue login
+          return true; 
         } catch (error) {
           console.error("Error saving Google user:", error);
-          return false; // Block login if DB crashes
+          return false;
         }
       }
       return true;
     },
-
-    // NEW: The Token Builder
+    // JWT token
     async jwt({ token, user, trigger }) {
-      // The 'user' variable only exists the exact moment they log in
       if (user) {
         await connectToDatabase();
-        // Fetch their absolute latest status straight from our database
         const dbUser = await User.findOne({ email: token.email });
 
         if (dbUser) {
           token.id = dbUser._id.toString();
-          token.isPro = dbUser.isPro; // <--- The magic key!
+          token.isPro = dbUser.isPro; 
         }
       }
       if (trigger === "update") {
         await connectToDatabase();
-        // Go check MongoDB one more time to see if the webhook flipped them to true
         const dbUser = await User.findOne({ email: token.email });
         if (dbUser) {
-          token.isPro = dbUser.isPro; // Refresh the token with the brand new status!
+          token.isPro = dbUser.isPro; 
         }
       }
       return token;
     },
 
-    // NEW: The Session Sender
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id;
-        session.user.isPro = token.isPro; // <--- Sends the magic key to the frontend!
+        session.user.isPro = token.isPro; 
       }
       return session;
     },

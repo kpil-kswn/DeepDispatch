@@ -40,27 +40,24 @@ export default function SubscriptionModel({ isOpen, onClose }) {
         throw new Error("Failed to create subscription on backend");
       }
 
-      // 3. Configure the Razorpay Popup Window
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Safe to expose public key
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, 
         subscription_id: data.subscriptionId,
         name: "Deep Dispatch",
         description: "1 Year Pro Access",
         theme: {
-          color: "#10B981", // Matches your emerald-500 Tailwind color!
+          color: "#10B981", 
         },
         handler: async function (response) {
-          // This runs when the payment is SUCCESSFUL
           console.log("Payment successful!", response);
           alert("Payment Successful! Welcome to Pro.");
           await new Promise(resolve=>setTimeout(resolve,1000));
           await update();
-          onClose(); // Close the modal
+          onClose(); 
           window.location.hred ="/optimize"
         },
       };
 
-      // 4. Open the window
       const rzp = new window.Razorpay(options);
       rzp.open();
 

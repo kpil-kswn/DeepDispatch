@@ -12,9 +12,7 @@ from keras import ops
 
 print("Loading ML Assets into Server Memory...")
 
-# ==========================================
-# 1. CUSTOM LAYER & GLOBAL LOAD (Happens ONCE on startup)
-# ==========================================
+# attention layer
 @register_keras_serializable(package="Custom")
 class Attention(Layer):
     def __init__(self, return_sequences=False, **kwargs):
@@ -57,7 +55,7 @@ class Attention(Layer):
             "return_sequences": self.return_sequences
         })
         return config
-# Ensure paths point to your new /models folder!
+
 solar_model = load_model(
     "models/Solar_BiLSTM_Attention.keras",
     custom_objects={"Attention": Attention},
@@ -77,12 +75,9 @@ scaler_X_wind = joblib.load("models/scaler_X_wind.save")
 scaler_Y_wind = joblib.load("models/scaler_Y_wind.save")
 
 
-# ==========================================
-# 2. THE CALLABLE MICROSERVICE FUNCTION
-# ==========================================
+# function to generate solar
 def predict_solar_generation(lat, lon, plant_capacity_mw, panel_area_m2, panel_efficiency, inverter_efficiency, system_loss_factor):
     API_KEY = "74cb7d5c5faea12ff85c27af60363c6a"
-    # --- 1. FETCH DATA ---
     url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
     response = requests.get(url)
     data = response.json()
@@ -100,14 +95,13 @@ def predict_solar_generation(lat, lon, plant_capacity_mw, panel_area_m2, panel_e
 
     df = pd.DataFrame(parsed_data)
 
-    # --- 2. TIMEZONE & INTERPOLATION ---
+    # interpolation to make 3hr into 1hr 
     df['datetime'] = pd.to_datetime(df['datetime'], unit='s')
     df['datetime'] = df['datetime'].dt.tz_localize('UTC').dt.tz_convert('Asia/Kolkata')
     df.set_index('datetime', inplace=True)
     df = df.astype(float)
     df = df.resample('1h').mean().interpolate(method='linear')
 
-    # --- 3. FEATURE ENGINEERING ---
     bhadla_site = pvlib.location.Location(lat, lon, tz='Asia/Kolkata')
     solpos = bhadla_site.get_solarposition(df.index)
     df['solar_zenith'] = solpos['apparent_zenith'].values
@@ -137,7 +131,6 @@ def predict_solar_generation(lat, lon, plant_capacity_mw, panel_area_m2, panel_e
     ]
     df_final = df[solar_features]
 
-    # --- 4. PREDICTION ---
     X_scaled = scaler_X_solar.transform(df_final.values)
     timesteps = 24
     Xs, future_times = [], []
@@ -159,8 +152,6 @@ def predict_solar_generation(lat, lon, plant_capacity_mw, panel_area_m2, panel_e
     results_df.loc[results_df['Predicted_GHI_W_m2'] < 10, 'Predicted_GHI_W_m2'] = 0
     results_df.set_index('Datetime (IST)', inplace=True)
 
-    # --- 5. MW CONVERSION ---
-    # FIX: Align the 118-hour solar position data to the 94-hour prediction data
     solpos_aligned = solpos.loc[results_df.index]
 
     erbs = pvlib.irradiance.erbs(results_df['Predicted_GHI_W_m2'], solpos_aligned['apparent_zenith'], results_df.index)
@@ -170,7 +161,6 @@ def predict_solar_generation(lat, lon, plant_capacity_mw, panel_area_m2, panel_e
         dni=erbs['dni'], ghi=results_df['Predicted_GHI_W_m2'], dhi=erbs['dhi']
     )
     
-    # Precise Operator Math
     dc_power_watts = poa['poa_global'] * panel_area_m2 * panel_efficiency
     ac_power_watts = dc_power_watts * inverter_efficiency * system_loss_factor
     results_df['Solar_MW'] = np.clip(ac_power_watts / 1_000_000, 0, plant_capacity_mw)
@@ -178,9 +168,7 @@ def predict_solar_generation(lat, lon, plant_capacity_mw, panel_area_m2, panel_e
     return results_df[['Solar_MW']].reset_index()
 
 
-# ==========================================
-# 3. WIND CALLABLE MICROSERVICE FUNCTION
-# ==========================================
+# function for wind generation
 def predict_wind_generation(lat, lon, cut_in_m_s, rated_m_s, cut_out_m_s, turbine_capacity_mw, num_turbines,
                             hub_height_m, terrain_type):
     """
@@ -188,7 +176,6 @@ def predict_wind_generation(lat, lon, cut_in_m_s, rated_m_s, cut_out_m_s, turbin
     """
     API_KEY = "74cb7d5c5faea12ff85c27af60363c6a"
 
-    # --- 1. FETCH DATA ---
     url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
     response = requests.get(url)
     data = response.json()
@@ -205,14 +192,12 @@ def predict_wind_generation(lat, lon, cut_in_m_s, rated_m_s, cut_out_m_s, turbin
 
     df = pd.DataFrame(parsed_data)
 
-    # --- 2. TIMEZONE & INTERPOLATION ---
     df['datetime'] = pd.to_datetime(df['datetime'], unit='s')
     df['datetime'] = df['datetime'].dt.tz_localize('UTC').dt.tz_convert('Asia/Kolkata')
     df.set_index('datetime', inplace=True)
     df = df.astype(float)
     df = df.resample('1h').mean().interpolate(method='linear')
 
-    # --- 3. FEATURE ENGINEERING ---
     wd_rad = df["WD10M"] * np.pi / 180.0
     df["wind_u"] = df["WS10M"] * np.sin(wd_rad)
     df["wind_v"] = df["WS10M"] * np.cos(wd_rad)
@@ -237,8 +222,6 @@ def predict_wind_generation(lat, lon, cut_in_m_s, rated_m_s, cut_out_m_s, turbin
     ]
 
     df_final = df[wind_features]
-
-    # --- 4. PREDICTION ---
     X_scaled = scaler_X_wind.transform(df_final.values)
 
     timesteps = 24
@@ -258,8 +241,6 @@ def predict_wind_generation(lat, lon, cut_in_m_s, rated_m_s, cut_out_m_s, turbin
         'Predicted_WS50M_m_s': final_wind_preds.flatten().round(2)
     })
     results_df.set_index('Datetime (IST)', inplace=True)
-
-    # --- 5. MW CONVERSION ---
     TERRAIN_ALPHA_MAP = {
         "smooth_water": 0.10,
         "flat_open_land": 0.143,

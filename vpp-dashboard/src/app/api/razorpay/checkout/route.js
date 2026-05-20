@@ -4,7 +4,7 @@ import Razorpay from "razorpay";
 import { connectToDatabase } from "@/lib/mongodb";
 import User from "@/models/User";
 
-// Initialize Razorpay
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -12,13 +12,13 @@ const razorpay = new Razorpay({
 
 export async function POST(req) {
   try {
-    // 1. Fetch the user's session from the request cookie securely on the server
+    // trying to get user from saved browser cookie
     const session = await getServerSession();
     if (!session || !session.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Fetch the user directly from MongoDB to guarantee we get their real ID
+    // an error occured so getting id from databse also
     await connectToDatabase();
     const dbUser = await User.findOne({ email: session.user.email });
     
@@ -26,13 +26,13 @@ export async function POST(req) {
       return NextResponse.json({ error: "User not found in database" }, { status: 404 });
     }
 
-    // 3. Create the Razorpay Subscription using the real DB string ID
+    // subscription
     const subscription = await razorpay.subscriptions.create({
       plan_id: process.env.RAZORPAY_PLAN_ID,
       customer_notify: 1,
-      total_count: 1, // 1 billing cycle
+      total_count: 1,
       notes: {
-        userId: dbUser._id.toString(), // <-- 100% stable, guaranteed database ID
+        userId: dbUser._id.toString(), 
       },
     });
 

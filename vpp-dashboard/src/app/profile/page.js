@@ -28,8 +28,6 @@ export default function ProfilePage() {
       fetchProfileData();
     }
   }, [status]);
-
-  // --- THIS IS YOUR MATCHING LOGIC ---
   // It finds all history runs that share the exact coordinates and type of a given site
   const getMatchingHistory = (site) => {
     return history.filter((run) => {
@@ -41,7 +39,7 @@ export default function ProfilePage() {
     });
   };
 
-  // Find "Orphaned" runs (History runs that don't match ANY saved site coordinates)
+  // history runs which didn't match any site saved
   const orphanedHistory = history.filter((run) => {
     return !sites.some((site) => {
       return (
@@ -64,7 +62,6 @@ export default function ProfilePage() {
     <main className="min-h-screen bg-gray-950 p-8 font-sans text-gray-100">
       <div className="max-w-5xl mx-auto">
         
-        {/* PROFILE HEADER */}
         <div className="bg-gray-900 border border-gray-800 p-6 rounded-xl shadow-md mb-10 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
@@ -92,7 +89,7 @@ export default function ProfilePage() {
             <p className="text-gray-500 italic">You haven't saved any sites yet.</p>
           )}
 
-          {/* MAP THROUGH ALL SITES */}
+          
           {sites.map((site) => {
             const siteRuns = getMatchingHistory(site);
 
@@ -142,7 +139,7 @@ export default function ProfilePage() {
             );
           })}
 
-          {/* ORPHANED RUNS (History that doesn't match any saved site) */}
+          {/* History which didn't match any site */}
           {orphanedHistory.length > 0 && (
             <div className="mt-8">
               <h2 className="text-2xl font-bold text-gray-400 border-b border-gray-800 pb-3 mb-6">👻 Unsaved Location Runs</h2>

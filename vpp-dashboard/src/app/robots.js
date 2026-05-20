@@ -5,6 +5,6 @@ export default function robots() {
       allow: '/',
       disallow: '/profile',
     },
-    sitemap: 'https://your-future-domain.com/sitemap.xml',
+    sitemap: 'https://deepdispatch12.vercel.app/sitemap.xml',
   }
 }

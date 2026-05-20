@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 
-// This middleman safely hides the LoginModel from Vercel's build engine
+// used middleman
 const LoginModel = dynamic(() => import('./LoginModel'), { ssr: false })
 
 export default function ClientLogin() {

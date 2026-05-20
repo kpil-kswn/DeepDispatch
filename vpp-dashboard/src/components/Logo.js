@@ -8,7 +8,6 @@ export default function Logo() {
           <stop offset="100%" stopColor="#1d4ed8" /> 
         </linearGradient>
         
-        {/* Emerald/Cyan gradient for "Dispatch" */}
         <linearGradient id="dispatchGrad" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#06b6d4" /> 
           <stop offset="100%" stopColor="#10b981" /> 

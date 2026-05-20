@@ -11,9 +11,6 @@ def run_pso_optimization(battery_capacity_mwh, initial_soc_mwh, df_solar=None, d
     """
     print("Initializing Virtual Power Plant Optimizer (PSO)...")
 
-    # ==========================================
-    # 1 & 2. DYNAMIC ASSET HANDLING & TIME ALIGNMENT
-    # ==========================================
     ist = pytz.timezone('Asia/Kolkata')
     now_ist = pd.Timestamp.now(tz=ist)
     tomorrow_date = (now_ist + pd.Timedelta(days=1)).date()
@@ -21,12 +18,11 @@ def run_pso_optimization(battery_capacity_mwh, initial_soc_mwh, df_solar=None, d
     if df_solar is None and df_wind is None:
         raise ValueError("Operator must configure at least one Solar or Wind asset.")
 
-    # Create arrays of zeros as fallbacks
+    # Created arrays of zeros as fallbacks
     solar_gen = np.zeros(24)
     wind_gen = np.zeros(24)
     time_index = None
 
-    # Process Solar if provided
     if df_solar is not None:
         df_solar['Date'] = pd.to_datetime(df_solar['Datetime (IST)']).dt.date
         df_day_s = df_solar[df_solar['Date'] == tomorrow_date].copy()
@@ -36,7 +32,6 @@ def run_pso_optimization(battery_capacity_mwh, initial_soc_mwh, df_solar=None, d
         solar_gen = df_day_s['Solar_MW'].values
         time_index = df_day_s['Datetime (IST)']
 
-    # Process Wind if provided
     if df_wind is not None:
         df_wind['Date'] = pd.to_datetime(df_wind['Datetime (IST)']).dt.date
         df_day_w = df_wind[df_wind['Date'] == tomorrow_date].copy()
@@ -46,16 +41,13 @@ def run_pso_optimization(battery_capacity_mwh, initial_soc_mwh, df_solar=None, d
         wind_gen = df_day_w['Wind_MW'].values
         if time_index is None: time_index = df_day_w['Datetime (IST)']
 
-    # Build the base DataFrame for the final output
     df_day = pd.DataFrame({
         'Datetime (IST)': time_index,
         'Solar_MW': solar_gen,
         'Wind_MW': wind_gen
     })
 
-    # ==========================================
-    # 3. GENERATE REALISTIC MARKET DATA
-    # ==========================================
+   # generating dummy market price and loaf demand data as it varies a lot 
     def generate_market_data():
         base_demand = np.array([
             40, 38, 35, 35, 38, 45,
@@ -74,9 +66,6 @@ def run_pso_optimization(battery_capacity_mwh, initial_soc_mwh, df_solar=None, d
 
     mock_demand_mw, dynamic_prices = generate_market_data()
 
-    # ==========================================
-    # 4. DEFINE VPP RULES (Using Dynamic Inputs)
-    # ==========================================
     def calculate_daily_profit(battery_actions):
         current_soc = initial_soc_mwh # Using dynamic input instead of constant
         total_profit = 0
@@ -99,9 +88,7 @@ def run_pso_optimization(battery_capacity_mwh, initial_soc_mwh, df_solar=None, d
 
         return total_profit
 
-    # ==========================================
-    # 5. PARTICLE SWARM OPTIMIZATION
-    # ==========================================
+    # Implementing particle swarm optimization
     print(f"Running Optimization for {tomorrow_date} with Dynamic Market Pricing...")
 
     num_particles = 100
@@ -135,9 +122,7 @@ def run_pso_optimization(battery_capacity_mwh, initial_soc_mwh, df_solar=None, d
                     gbest_score = score
                     gbest_position = particles[p].copy()
 
-    # ==========================================
-    # 6. GENERATE THE FINAL JSON SCHEDULE
-    # ==========================================
+    # For final shedule of battery
     optimal_schedule = gbest_position
     final_soc = [initial_soc_mwh] # Starts dynamically
     grid_dispatch = []
@@ -169,7 +154,7 @@ def run_pso_optimization(battery_capacity_mwh, initial_soc_mwh, df_solar=None, d
                        'Target_Battery_Action_MW', 'Battery_SoC_MWh', 'Actual_Grid_Sales_MW']
     final_master_df = df_day[columns_to_keep]
 
-    # Convert Timestamps to strings so they can be sent as JSON over the internet
+    # Converting Timestamps to strings so they can be sent as JSON over the internet
     final_master_df['Datetime (IST)'] = final_master_df['Datetime (IST)'].astype(str)
 
     # Convert the DataFrame to a list of dictionaries

@@ -3,7 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthProvider from "@/components/AuthProvider";
-import ClientLogin from "@/components/ClientLogin"; // <-- Using the middleman!
+import ClientLogin from "@/components/ClientLogin"; 
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,11 +15,11 @@ export const metadata = {
     title: "DeepDispatch VPP Optimizer",
     description:
       "AI-driven Virtual Power Plant dashboard for renewable energy management.",
-    url: "https://your-future-domain.com",
+    url: "https://deepdispatch12.vercel.app",
     siteName: "DeepDispatch",
     images: [
       {
-        url: "https://your-future-domain.com/dashboard.png",
+        url: "https://deepdispatch12.vercel.app/dashboard.png",
         width: 1200,
         height: 630,
       },
@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
       >
         <AuthProvider>
           <Navbar />
-          <ClientLogin /> {/* <-- Safely rendered here */}
+          <ClientLogin />
           <div className="flex-grow">{children}</div>
           <Footer />
         </AuthProvider>

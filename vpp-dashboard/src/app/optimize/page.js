@@ -107,8 +107,8 @@ export default function Home() {
         }),
       });
 
-      if (response.ok) alert("✅ Site saved successfully! You can view it in your Profile.");
-      else alert("❌ Failed to save site. Are you logged in?");
+      if (response.ok) alert("Site saved successfully! You can view it in your Profile.");
+      else alert("Failed to save site. Are you logged in?");
     } catch (error) {
       console.error("Error saving site:", error);
     }
