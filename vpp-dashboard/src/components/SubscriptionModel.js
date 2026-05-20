@@ -54,7 +54,7 @@ export default function SubscriptionModel({ isOpen, onClose }) {
           await new Promise(resolve=>setTimeout(resolve,1000));
           await update();
           onClose(); 
-          window.location.hred ="/optimize"
+          window.location.href ="/optimize"
         },
       };
 
