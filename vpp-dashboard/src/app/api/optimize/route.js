@@ -13,7 +13,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const pythonResponse = await fetch("https://deepdispatch.onrender.com", {
+    const pythonResponse = await fetch("https://deepdispatch.onrender.com/api/v1/optimize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
