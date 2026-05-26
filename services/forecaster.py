@@ -162,7 +162,7 @@ def predict_solar_generation(lat, lon, plant_capacity_mw, panel_area_m2, panel_e
     )
     
     dc_power_watts = poa['poa_global'] * panel_area_m2 * panel_efficiency
-    ac_power_watts = dc_power_watts * inverter_efficiency * system_loss_factor
+    ac_power_watts = dc_power_watts * inverter_efficiency * (1-system_loss_factor)
     results_df['Solar_MW'] = np.clip(ac_power_watts / 1_000_000, 0, plant_capacity_mw)
     
     return results_df[['Solar_MW']].reset_index()
